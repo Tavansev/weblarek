@@ -20,20 +20,24 @@ export type TPayment = 'card' | 'cash';
 
 //Интерфейс данных покупателя
 export interface IBuyer {
-    payment: TPayment;  // Способ оплаты
+    payment: TPayment | null;  // Способ оплаты
     email: string;      // Электронная почта
     phone: string;      // Номер телефона
     address: string;    // Адрес доставки
 }
 
+//Интерфейс ошибок валидации данных покупателя
+export interface IBuyerValidationErrors {
+    payment?: string;  // Ошибка в способе оплаты
+    email?: string;    // Ошибка в email
+    phone?: string;    // Ошибка в телефоне
+    address?: string;  // Ошибка в адресе
+}
+
 //Интерфейс заказа для отправки на сервер
-export interface IOrder {
+export interface IOrder extends IBuyer {
     items: string[];    // Массив ID товаров в заказе
     total: number;      // Общая стоимость заказа
-    payment: TPayment;  // Способ оплаты
-    email: string;      // Электронная почта
-    phone: string;      // Номер телефона
-    address: string;    // Адрес доставки
 }
 
 //Интерфейс ответа сервера при получении списка товаров

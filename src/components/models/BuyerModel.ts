@@ -1,5 +1,4 @@
-import { IBuyer, TPayment } from '../../types';
-
+import { IBuyer, TPayment, IBuyerValidationErrors } from '../../types';
 /**
  * Класс модели данных для хранения данных покупателя
  * 
@@ -57,7 +56,7 @@ export class BuyerModel {
      */
     getData(): IBuyer {
         return {
-            payment: this._payment as TPayment,
+            payment: this._payment,
             email: this._email,
             phone: this._phone,
             address: this._address
@@ -76,7 +75,7 @@ export class BuyerModel {
      * Валидация данных
      * @returns объект с ошибками или пустой объект
      */
-    validate(): Partial<Record<keyof IBuyer, string>> {
+    validate(): IBuyerValidationErrors {
         const errors: Partial<Record<keyof IBuyer, string>> = {};
 
         if (!this._payment) {
