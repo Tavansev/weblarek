@@ -26,13 +26,8 @@ export interface IBuyer {
     address: string;    // Адрес доставки
 }
 
-//Интерфейс ошибок валидации данных покупателя
-export interface IBuyerValidationErrors {
-    payment?: string;  // Ошибка в способе оплаты
-    email?: string;    // Ошибка в email
-    phone?: string;    // Ошибка в телефоне
-    address?: string;  // Ошибка в адресе
-}
+//Тип ошибок валидации данных покупателя
+export type IBuyerValidationErrors = Partial<Record<keyof IBuyer, string>>;
 
 //Интерфейс заказа для отправки на сервер
 export interface IOrder extends IBuyer {

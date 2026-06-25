@@ -76,7 +76,7 @@ export class BuyerModel {
      * @returns объект с ошибками или пустой объект
      */
     validate(): IBuyerValidationErrors {
-        const errors: Partial<Record<keyof IBuyer, string>> = {};
+        const errors: IBuyerValidationErrors = {};
 
         if (!this._payment) {
             errors.payment = 'Не выбран способ оплаты';
