@@ -2,19 +2,16 @@ import { Card } from './Card';
 import { categoryMap } from '../../utils/constants';
 import { IProduct } from '../../types';
 
-export class CardCatalog extends Card<IProduct> {
+export class CardWithImage<T extends IProduct> extends Card<T> {
     protected _category: HTMLElement;
     protected _image: HTMLImageElement;
+    protected _button: HTMLButtonElement;
 
-    constructor(container: HTMLElement, actions?: { onClick?: (event: MouseEvent) => void }) {
+    constructor(container: HTMLElement) {
         super(container);
         this._category = container.querySelector('.card__category') as HTMLElement;
         this._image = container.querySelector('.card__image') as HTMLImageElement;
-
-        // Клик по всей карточке
-        if (actions?.onClick) {
-            this.container.addEventListener('click', actions.onClick);
-        }
+        this._button = container.querySelector('.card__button') as HTMLButtonElement;
     }
 
     set category(value: string) {
@@ -28,6 +25,18 @@ export class CardCatalog extends Card<IProduct> {
     set image(value: string) {
         if (this._image) {
             this._image.src = value;
+        }
+    }
+
+    set buttonText(value: string) {
+        if (this._button) {
+            this._button.textContent = value;
+        }
+    }
+
+    set buttonDisabled(value: boolean) {
+        if (this._button) {
+            this._button.disabled = value;
         }
     }
 }

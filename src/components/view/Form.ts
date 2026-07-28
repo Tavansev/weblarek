@@ -22,13 +22,12 @@ export abstract class Form<T> extends Component<T> {
         this.container.addEventListener('submit', (e: Event) => {
             e.preventDefault();
             if (this._submitButton && !this._submitButton.disabled) {
-                this.events.emit(`${this.container.name}:submit`, this.getFormData());
+                this.events.emit(`${this.container.name}:submit`);
             }
         });
     }
 
     protected abstract onInputChange(field: string, value: string): void;
-    protected abstract getFormData(): T;
 
     set valid(value: boolean) {
         if (this._submitButton) {

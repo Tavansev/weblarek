@@ -1,4 +1,5 @@
 import { Form } from './Form';
+import { IEvents } from '../base/Events';
 import { TPayment } from '../../types';
 
 export interface IOrderForm {
@@ -15,11 +16,9 @@ export class OrderForm extends Form<IOrderForm> {
         this._paymentButtons = Array.from(container.querySelectorAll('.order__buttons .button')) as HTMLButtonElement[];
         this._addressInput = container.querySelector('input[name="address"]') as HTMLInputElement;
 
-        // Обработка кликов по кнопкам оплаты
         this._paymentButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const payment = button.name as TPayment;
-                this.setPayment(payment);
                 this.events.emit('order:paymentChange', { payment });
             });
         });
@@ -56,11 +55,5 @@ export class OrderForm extends Form<IOrderForm> {
             btn.classList.contains('button_alt-active')
         );
         return activeButton ? activeButton.name as TPayment : null;
-    }
-
-    reset(): void {
-        this.payment = null as unknown as TPayment;
-        this.address = '';
-        this.valid = false;
     }
 }

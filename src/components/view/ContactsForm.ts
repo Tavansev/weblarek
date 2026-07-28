@@ -1,4 +1,5 @@
 import { Form } from './Form';
+import { IEvents } from '../base/Events';
 
 export interface IContactsForm {
     email: string;
