@@ -1,9 +1,22 @@
 import { IProduct } from '../../types';
+import { IEvents } from '../base/Events';
 
-//Класс модели данных для хранения корзины с покупками
+/**
+ * Класс модели данных для хранения корзины с покупками
+ * 
+ * Ответственность:
+ * - Хранит массив товаров в корзине
+ * - Управляет добавлением и удалением товаров
+ */
 export class BasketModel {
     // Массив товаров в корзине
     private _items: IProduct[] = [];
+
+    /**
+     * Конструктор
+     * @param events - брокер событий
+     */
+    constructor(protected events: IEvents) {}
 
     /**
      * Получение массива товаров, которые находятся в корзине
@@ -20,6 +33,7 @@ export class BasketModel {
     addItem(product: IProduct): void {
         if (!this.contains(product.id)) {
             this._items.push(product);
+            this.emitChange();
         }
     }
 
@@ -29,11 +43,15 @@ export class BasketModel {
      */
     removeItem(id: string): void {
         this._items = this._items.filter(item => item.id !== id);
+        this.emitChange();
     }
 
-    //Очистка корзины
+    /**
+     * Очистка корзины
+     */
     clear(): void {
         this._items = [];
+        this.emitChange();
     }
 
     /**
@@ -59,5 +77,16 @@ export class BasketModel {
      */
     contains(id: string): boolean {
         return this._items.some(item => item.id === id);
+    }
+
+    /**
+     * Генерация события об изменении корзины
+     */
+    private emitChange(): void {
+        this.events.emit('basket:changed', {
+            items: this._items,
+            total: this.getTotal(),
+            count: this.getCount()
+        });
     }
 }

@@ -1,4 +1,5 @@
 import { IProduct } from '../../types';
+import { IEvents } from '../base/Events';
 
 /**
  * Класс модели данных для хранения каталога товаров
@@ -15,11 +16,19 @@ export class CatalogModel {
     private _preview: string | null = null;
 
     /**
+     * Конструктор
+     * @param events - брокер событий
+     */
+    constructor(protected events: IEvents) {}
+
+    /**
      * Сохраняет массив товаров
      * @param items - массив товаров
      */
     setItems(items: IProduct[]): void {
         this._items = items;
+        // Генерируем событие об изменении каталога
+        this.events.emit('catalog:changed', { items: this._items });
     }
 
     /**
@@ -45,6 +54,8 @@ export class CatalogModel {
      */
     setPreview(id: string | null): void {
         this._preview = id;
+        // Генерируем событие об изменении выбранного товара
+        this.events.emit('catalog:previewChanged', { preview: this._preview });
     }
 
     /**

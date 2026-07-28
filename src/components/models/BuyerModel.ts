@@ -1,9 +1,12 @@
 import { IBuyer, TPayment, IBuyerValidationErrors } from '../../types';
+import { IEvents } from '../base/Events';
+
 /**
  * Класс модели данных для хранения данных покупателя
  * 
  * Ответственность:
  * - Хранит данные покупателя: вид оплаты, адрес, телефон, email
+ * - Валидирует данные
  */
 export class BuyerModel {
     // Способ оплаты
@@ -19,11 +22,18 @@ export class BuyerModel {
     private _phone: string = '';
 
     /**
+     * Конструктор
+     * @param events - брокер событий
+     */
+    constructor(protected events: IEvents) {}
+
+    /**
      * Сохранение способа оплаты
      * @param payment - способ оплаты
      */
     setPayment(payment: TPayment): void {
         this._payment = payment;
+        this.emitChange();
     }
 
     /**
@@ -32,6 +42,7 @@ export class BuyerModel {
      */
     setAddress(address: string): void {
         this._address = address;
+        this.emitChange();
     }
 
     /**
@@ -40,6 +51,7 @@ export class BuyerModel {
      */
     setEmail(email: string): void {
         this._email = email;
+        this.emitChange();
     }
 
     /**
@@ -48,6 +60,7 @@ export class BuyerModel {
      */
     setPhone(phone: string): void {
         this._phone = phone;
+        this.emitChange();
     }
 
     /**
@@ -63,12 +76,15 @@ export class BuyerModel {
         };
     }
 
-    // Очистка данных покупателя
+    /**
+     * Очистка данных покупателя
+     */
     clear(): void {
         this._payment = null;
         this._address = '';
         this._email = '';
         this._phone = '';
+        this.emitChange();
     }
 
     /**
@@ -95,5 +111,12 @@ export class BuyerModel {
         }
 
         return errors;
+    }
+
+    /**
+     * Генерация события об изменении данных покупателя
+     */
+    private emitChange(): void {
+        this.events.emit('buyer:changed', { buyer: this.getData() });
     }
 }

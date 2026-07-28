@@ -249,3 +249,211 @@ interface IProductResponse {
 Методы класса:
 `getProducts(): Promise<IProductResponse>` - выполняет GET запрос к эндпоинту /product и возвращает объект с массивом товаров.  
 `postOrder(order: IOrder): Promise<IOrderResult>` - выполняет POST запрос к эндпоинту /order с данными заказа и возвращает результат оформления заказа.
+
+## Слой Представления (View)
+
+### Базовые классы
+
+#### Класс Component<T>
+Базовый класс для всех компонентов представления.
+
+Конструктор:
+`constructor(container: HTMLElement)`
+
+Методы:
+`render(data?: Partial<T>): HTMLElement` - рендерит компонент с данными
+
+#### Класс Modal
+Класс для управления модальным окном.
+
+Конструктор:
+`constructor(container: HTMLElement, events: IEvents)`
+
+Поля:
+`_content: HTMLElement | null` - содержимое модального окна
+
+Методы:
+`set content(value: HTMLElement)` - устанавливает содержимое
+`open(): void` - открывает модальное окно (добавляет класс `modal_active`)
+`close(): void` - закрывает модальное окно
+`render(data?: object): HTMLElement` - рендерит модальное окно
+
+События:
+`modal:open` - при открытии модального окна
+`modal:close` - при закрытии модального окна
+
+### Карточки товаров
+
+#### Класс Card<T>
+Базовый класс для всех карточек товара.
+
+Конструктор:
+`constructor(container: HTMLElement, actions?: ICardActions)`
+
+Поля:
+`_title: HTMLElement` - элемент с названием
+`_price: HTMLElement` - элемент с ценой
+`_button: HTMLButtonElement` - кнопка действия
+
+Методы:
+`set title(value: string)` - устанавливает название
+`set price(value: number | null)` - устанавливает цену
+`set buttonText(value: string)` - устанавливает текст кнопки
+
+#### Класс CardCatalog
+Карточка для отображения в каталоге.
+
+Наследуется от:
+`Card<T>`
+
+Поля:
+`_category: HTMLElement` - элемент с категорией
+`_image: HTMLImageElement` - элемент с изображением
+
+Методы:
+`set category(value: string)` - устанавливает категорию с модификатором CSS
+`set image(value: string)` - устанавливает изображение
+
+События:
+`card:select` - при клике на карточку (передаёт `id` товара)
+
+#### Класс CardPreview
+Карточка для подробного просмотра в модальном окне.
+
+Наследуется от:
+`CardCatalog`
+
+Поля:
+`_description: HTMLElement` - элемент с описанием
+
+Методы:
+`set description(value: string)` - устанавливает описание
+`set buttonText(value: string)` - устанавливает текст кнопки
+
+События:
+`card:addToBasket` - при клике на кнопку "В корзину"
+
+#### Класс CardBasket
+Карточка для отображения в корзине.
+
+Наследуется от:
+`Card<T>`
+
+Поля:
+`_index: HTMLElement` - элемент с номером позиции
+`_deleteButton: HTMLButtonElement` - кнопка удаления
+
+Методы:
+`set index(value: number)` - устанавливает номер позиции
+
+События:
+`card:removeFromBasket` - при клике на кнопку удаления (передаёт `id` товара)
+
+### Формы
+
+#### Класс Form<T>
+Базовый класс для всех форм.
+
+Конструктор:
+`constructor(container: HTMLFormElement, events: IEvents)`
+
+Поля:
+`_submitButton: HTMLButtonElement` - кнопка отправки
+`_errors: HTMLElement` - элемент для отображения ошибок
+
+Методы:
+`set valid(value: boolean)` - устанавливает состояние валидности кнопки
+`set errors(value: string)` - устанавливает текст ошибок
+`render(data?: Partial<T>): HTMLElement` - рендерит форму
+
+#### Класс OrderForm
+Форма для ввода адреса и выбора способа оплаты.
+
+Наследуется от:
+`Form<IOrderForm>`
+
+Поля:
+`_paymentButtons: HTMLElement[]` - кнопки выбора оплаты
+`_addressInput: HTMLInputElement` - поле ввода адреса
+
+Методы:
+`set payment(value: TPayment)` - устанавливает выбранный способ оплаты (активирует кнопку)
+`set address(value: string)` - устанавливает адрес
+`reset(): void` - сбрасывает форму
+
+События:
+`order:paymentChange` - при выборе способа оплаты (передаёт `payment`)
+`order:addressChange` - при изменении адреса (передаёт `address`)
+`order:submit` - при отправке формы (передаёт данные формы)
+
+#### Класс ContactsForm
+Форма для ввода контактов.
+
+Наследуется от:
+`Form<IContactsForm>`
+
+Поля:
+`_emailInput: HTMLInputElement` - поле ввода email
+`_phoneInput: HTMLInputElement` - поле ввода телефона
+
+Методы:
+`set email(value: string)` - устанавливает email
+`set phone(value: string)` - устанавливает телефон
+
+События:
+`contacts:emailChange` - при изменении email (передаёт `email`)
+`contacts:phoneChange` - при изменении телефона (передаёт `phone`)
+`contacts:submit` - при отправке формы (передаёт данные формы)
+
+### Корзина
+
+#### Класс Basket
+Компонент для отображения корзины.
+
+Конструктор:
+`constructor(container: HTMLElement, events: IEvents)`
+
+Поля:
+`_list: HTMLElement` - список товаров
+`_total: HTMLElement` - элемент с общей стоимостью
+`_button: HTMLButtonElement` - кнопка оформления заказа
+
+Методы:
+`set items(value: HTMLElement[])` - устанавливает список товаров
+`set total(value: number)` - устанавливает общую стоимость
+`set disabled(value: boolean)` - блокирует кнопку оформления
+
+События:
+`basket:open` - при открытии корзины
+
+### Каталог
+
+#### Класс Catalog
+Компонент для отображения каталога товаров.
+
+Конструктор:
+`constructor(container: HTMLElement)`
+
+Поля:
+`_items: HTMLElement[]` - массив карточек
+
+Методы:
+`set items(value: HTMLElement[])` - устанавливает карточки в каталог
+
+### Успешный заказ
+
+#### Класс Success
+Компонент для отображения успешного оформления заказа.
+
+Конструктор:
+`constructor(container: HTMLElement, actions: ISuccessActions)`
+
+Поля:
+`_total: HTMLElement` - элемент с суммой списания
+`_button: HTMLButtonElement` - кнопка "За новыми покупками!"
+
+Методы:
+`set total(value: number)` - устанавливает сумму списания
+
+События:
+`success:close` - при клике на кнопку закрытия
