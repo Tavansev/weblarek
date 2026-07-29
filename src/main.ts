@@ -45,7 +45,7 @@ const modalContainer = document.querySelector('#modal-container') as HTMLElement
 const basketCounter = document.querySelector('.header__basket-counter') as HTMLElement;
 const basketButton = document.querySelector('.header__basket') as HTMLButtonElement;
 
-// 5. Компоненты представления
+// 5. Компоненты представления (создаём один раз)
 const modal = new Modal(modalContainer, events);
 const catalog = new Catalog(gallery);
 
@@ -58,7 +58,7 @@ const orderTemplate = document.querySelector('#order') as HTMLTemplateElement;
 const contactsTemplate = document.querySelector('#contacts') as HTMLTemplateElement;
 const successTemplate = document.querySelector('#success') as HTMLTemplateElement;
 
-// Создаём представления, которые будут переиспользоваться
+// Создаём представления один раз и переиспользуем
 const basketElement = cloneTemplate<HTMLElement>(basketTemplate);
 const basket = new Basket(basketElement, events);
 
@@ -69,7 +69,19 @@ const contactsElement = cloneTemplate<HTMLElement>(contactsTemplate);
 const contactsForm = new ContactsForm(contactsElement as HTMLFormElement, events);
 
 const successElement = cloneTemplate<HTMLElement>(successTemplate);
-let successInstance: Success | null = null;
+const success = new Success(successElement, {
+    onClick: () => {
+        events.emit('success:close');
+    }
+});
+
+// Создаём один экземпляр CardPreview
+const previewElement = cloneTemplate<HTMLElement>(cardPreviewTemplate);
+const cardPreview = new CardPreview(previewElement, {
+    onClick: () => {
+        events.emit('preview:click');
+    }
+});
 
 // ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
 
@@ -99,7 +111,7 @@ events.on('catalog:changed', () => {
     catalog.items = cards;
 });
 
-// Событие: изменение выбранного товара (обновляем превью)
+// Событие: изменение выбранного товара - обновляем существующий экземпляр
 events.on('catalog:previewChanged', () => {
     const productId = catalogModel.getPreview();
     if (!productId) return;
@@ -107,29 +119,23 @@ events.on('catalog:previewChanged', () => {
     const product = catalogModel.getItem(productId);
     if (!product) return;
 
-    const cardElement = cloneTemplate<HTMLElement>(cardPreviewTemplate);
-    const card = new CardPreview(cardElement, {
-        onClick: () => {
-            events.emit('preview:click', { id: product.id });
-        }
-    });
-
-    card.title = product.title;
-    card.price = product.price;
-    card.category = product.category;
-    card.image = CDN_URL + product.image;
-    card.description = product.description;
+    // Обновляем существующий экземпляр, а не создаём новый
+    cardPreview.title = product.title;
+    cardPreview.price = product.price;
+    cardPreview.category = product.category;
+    cardPreview.image = CDN_URL + product.image;
+    cardPreview.description = product.description;
     
     if (product.price === null) {
-        card.buttonText = 'Недоступно';
-        card.buttonDisabled = true;
+        cardPreview.buttonText = 'Недоступно';
+        cardPreview.buttonDisabled = true;
     } else {
         const isInBasket = basketModel.contains(product.id);
-        card.buttonText = isInBasket ? 'Убрать из корзины' : 'В корзину';
-        card.buttonDisabled = false;
+        cardPreview.buttonText = isInBasket ? 'Убрать из корзины' : 'В корзину';
+        cardPreview.buttonDisabled = false;
     }
 
-    modal.content = cardElement;
+    modal.content = previewElement;
     modal.open();
 });
 
@@ -138,9 +144,12 @@ events.on('card:select', (data: { id: string }) => {
     catalogModel.setPreview(data.id);
 });
 
-// Событие: клик по кнопке в превью
-events.on('preview:click', (data: { id: string }) => {
-    const product = catalogModel.getItem(data.id);
+// Клик по кнопке в превью - получаем ID из модели
+events.on('preview:click', () => {
+    const productId = catalogModel.getPreview();
+    if (!productId) return;
+    
+    const product = catalogModel.getItem(productId);
     if (!product || product.price === null) return;
     
     if (basketModel.contains(product.id)) {
@@ -149,7 +158,8 @@ events.on('preview:click', (data: { id: string }) => {
         basketModel.addItem(product);
     }
     
-    catalogModel.setPreview(data.id);
+    // Обновляем превью после изменения корзины
+    catalogModel.setPreview(productId);
 });
 
 // ------ Корзина ------
@@ -165,28 +175,23 @@ events.on('basket:changed', () => {
         basketCounter.textContent = String(count);
     }
 
-    // Обновляем содержимое корзины
-    if (items.length === 0) {
-        basket.items = [];
-        basket.disabled = true;
-        basket.total = total;
-    } else {
-        const cards = items.map((item, index) => {
-            const cardElement = cloneTemplate<HTMLElement>(cardBasketTemplate);
-            const card = new CardBasket(cardElement, {
-                onDelete: () => {
-                    events.emit('card:removeFromBasket', { id: item.id });
-                }
-            });
-            card.title = item.title;
-            card.price = item.price;
-            card.index = index + 1;
-            return cardElement;
+    // Создаём карточки для всех товаров (если корзина пуста, мап вернёт пустой массив)
+    const cards = items.map((item, index) => {
+        const cardElement = cloneTemplate<HTMLElement>(cardBasketTemplate);
+        const card = new CardBasket(cardElement, {
+            onDelete: () => {
+                events.emit('card:removeFromBasket', { id: item.id });
+            }
         });
-        basket.items = cards;
-        basket.disabled = false;
-        basket.total = total;
-    }
+        card.title = item.title;
+        card.price = item.price;
+        card.index = index + 1;
+        return cardElement;
+    });
+    
+    basket.items = cards;
+    basket.disabled = items.length === 0;
+    basket.total = total;
 });
 
 // Событие: открытие корзины
@@ -204,7 +209,6 @@ events.on('card:removeFromBasket', (data: { id: string }) => {
 events.on('basket:order', () => {
     modal.content = orderForm.render();
     modal.open();
-    events.emit('buyer:changed');
 });
 
 // ------ Форма заказа ------
@@ -253,17 +257,10 @@ events.on('contacts:submit', () => {
     
     communicationLayer.postOrder(order)
         .then(result => {
-            successInstance = new Success(successElement, {
-                onClick: () => {
-                    events.emit('success:close');
-                }
-            });
-            successInstance.total = result.total;
-            
+            success.total = result.total;
             basketModel.clear();
             buyerModel.clear();
-            
-            modal.content = successInstance.render();
+            modal.content = success.render();
         })
         .catch(error => {
             console.error('Ошибка оформления заказа:', error);
